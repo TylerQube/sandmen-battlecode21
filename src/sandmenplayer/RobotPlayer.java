@@ -1,7 +1,7 @@
 package sandmenplayer;
 import battlecode.common.*;
 
-public strictfp class SandmenPlayer {
+public strictfp class RobotPlayer {
     static RobotController rc;
 
     static final RobotType[] spawnableRobot = {
@@ -32,7 +32,7 @@ public strictfp class SandmenPlayer {
 
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
-        SandmenPlayer.rc = rc;
+        RobotPlayer.rc = rc;
 
         turnCount = 0;
 
