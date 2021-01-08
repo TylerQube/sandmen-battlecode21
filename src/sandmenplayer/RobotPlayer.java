@@ -22,6 +22,7 @@ public strictfp class RobotPlayer {
     };
 
     static int turnCount;
+    static int buildCount;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -35,6 +36,7 @@ public strictfp class RobotPlayer {
         RobotPlayer.rc = rc;
 
         turnCount = 0;
+        buildCount = turnCount;
 
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
@@ -62,11 +64,18 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
+        // start by spawning slanderers
+        RobotType toBuild = RobotType.POLITICIAN;
+        if(turnCount < 5) {
+            toBuild = RobotType.SLANDERER;
+        } else if (turnCount % 3 == 0){
+            toBuild = RobotType.MUCKRAKER;
+        }
+        int influence = rc.getInfluence()/5;
         for (Direction dir : directions) {
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
+                buildCount++;
             } else {
                 break;
             }
