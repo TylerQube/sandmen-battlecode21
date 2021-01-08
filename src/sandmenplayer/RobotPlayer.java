@@ -80,6 +80,8 @@ public strictfp class RobotPlayer {
                 break;
             }
         }
+
+        rc.bid(rc.getInfluence()/10);
     }
 
     static void runPolitician() throws GameActionException {
