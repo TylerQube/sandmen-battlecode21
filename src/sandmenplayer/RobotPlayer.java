@@ -1,4 +1,6 @@
 package sandmenplayer;
+import java.util.Set;
+import java.util.HashSet;
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
@@ -22,6 +24,7 @@ public strictfp class RobotPlayer {
     };
 
     static int turnCount;
+    static Set<Integer> robotIDs = new HashSet<>();
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -67,6 +70,13 @@ public strictfp class RobotPlayer {
         for (Direction dir : directions) {
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
+                // save robot ID after building
+                for(RobotInfo rbt : rc.senseNearbyRobots(1)) {
+                    // only save ID if it is friendly and matches type of built robot
+                    if(rbt.getTeam().equals(rc.getTeam()) && rbt.getType().equals(toBuild)) {
+                        robotIDs.add(rbt.getID());
+                    }
+                }
             } else {
                 break;
             }
