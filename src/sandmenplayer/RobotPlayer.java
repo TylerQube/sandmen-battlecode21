@@ -168,5 +168,12 @@ public strictfp class RobotPlayer {
             return true;
         } else return false;
     }
+
+    static int getFlagFromLocation(MapLocation loc, int info) {
+        int x = loc.x, y = loc.y;
+        int flag = 128 * (x % 128) + (y % 128);
+        flag += info * 128 * 128;
+        return flag;
+    }
 }
 
