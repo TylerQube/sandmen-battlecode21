@@ -66,9 +66,9 @@ public strictfp class RobotPlayer {
     static void runEnlightenmentCenter() throws GameActionException {
         // start by spawning slanderers
         RobotType toBuild = RobotType.POLITICIAN;
-        if(turnCount < 5) {
+        if(buildCount < 5) {
             toBuild = RobotType.SLANDERER;
-        } else if (turnCount % 3 == 0){
+        } else if (buildCount % 3 == 0){
             toBuild = RobotType.MUCKRAKER;
         }
         int influence = rc.getInfluence()/5;
