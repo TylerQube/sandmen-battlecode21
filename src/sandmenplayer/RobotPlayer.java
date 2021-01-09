@@ -25,6 +25,7 @@ public strictfp class RobotPlayer {
 
     static int turnCount;
     static Set<Integer> robotIDs = new HashSet<>();
+    static int ecID;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -40,6 +41,15 @@ public strictfp class RobotPlayer {
         turnCount = 0;
 
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
+
+        // save EC ID when created
+        for(RobotInfo rbt : rc.senseNearbyRobots(1)) {
+            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && rbt.getTeam().equals(rc.getTeam())) {
+                ecID = rbt.getID();
+                break;
+            }
+        }
+
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
@@ -79,6 +89,13 @@ public strictfp class RobotPlayer {
                 }
             } else {
                 break;
+            }
+        }
+
+        // remove robot ID if it is destroyed
+        for(Integer rbtID : robotIDs) {
+            if(!rc.canGetFlag(rbtID)) {
+                robotIDs.remove(rbtID);
             }
         }
     }
