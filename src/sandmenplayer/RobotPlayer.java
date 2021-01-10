@@ -175,5 +175,27 @@ public strictfp class RobotPlayer {
         flag += info * 128 * 128;
         return flag;
     }
+
+    static MapLocation getLocationFromFlag(int flag) {
+        int x = (flag / 128) % 128;
+        int y = flag % 128;
+
+        MapLocation curLoc = rc.getLocation();
+        int offsetX = curLoc.x / 128;
+        int offsetY = curLoc.y / 128;
+
+        MapLocation absLoc = new MapLocation(offsetX * 128 + curLoc.x, offsetY * 128 + curLoc.y);
+        for(int i = -1; i <= 1; i+=2) {
+            for(int j = -1; j <= 1; j+=2) {
+                if (Math.abs(i) == Math.abs(j)) continue;
+                MapLocation testLoc = absLoc.translate(128*i, 128*j);
+                if(rc.getLocation().distanceSquaredTo(testLoc) < rc.getLocation().distanceSquaredTo(absLoc)) {
+                    absLoc = testLoc;
+                }
+            }
+        }
+
+        return absLoc;
+    }
 }
 
