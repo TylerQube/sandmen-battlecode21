@@ -171,31 +171,37 @@ public strictfp class RobotPlayer {
 
     static int getFlagFromLocation(MapLocation loc, int info) {
         int x = loc.x, y = loc.y;
-        int flag = 128 * (x % 128) + (y % 128);
-        flag += info * 128 * 128;
+        int flag = (x % 128) << 7;
+        flag += (y % 128);
+        flag += (info << 14);
         return flag;
     }
 
     static MapLocation getLocationFromFlag(int flag) {
-        int x = (flag / 128) % 128;
-        int y = flag % 128;
+        int bitmask = 0b1111111;
+        int x = (flag >> 7) & bitmask;
+        int y = flag & bitmask;
+        int msgCode = (flag >> 14);
 
         MapLocation curLoc = rc.getLocation();
+        // divide by 128 to get offset of absolute map coordinates from what would be evenly divisible by 128
         int offsetX = curLoc.x / 128;
         int offsetY = curLoc.y / 128;
 
-        MapLocation absLoc = new MapLocation(offsetX * 128 + curLoc.x, offsetY * 128 + curLoc.y);
-        for(int i = -1; i <= 1; i+=2) {
-            for(int j = -1; j <= 1; j+=2) {
+        // calculate the location communicated through the flag
+        MapLocation flagLoc = new MapLocation(offsetX * 128 + x, offsetY * 128 + y);
+        // there are 4 possible coordinates from flag values, iterate through all and find the closest to the robot
+        for(int i = -1; i <= 1; i+=1) {
+            for(int j = -1; j <= 1; j+=1) {
                 if (Math.abs(i) == Math.abs(j)) continue;
-                MapLocation testLoc = absLoc.translate(128*i, 128*j);
+                MapLocation testLoc = flagLoc.translate(128*i, 128*j);
                 if(rc.getLocation().distanceSquaredTo(testLoc) < rc.getLocation().distanceSquaredTo(absLoc)) {
-                    absLoc = testLoc;
+                    flagLoc = testLoc;
                 }
             }
         }
 
-        return absLoc;
+        return flagLoc;
     }
 
     static final double passabilityThreshold = 0.6;
