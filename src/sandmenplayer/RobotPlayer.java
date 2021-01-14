@@ -197,5 +197,38 @@ public strictfp class RobotPlayer {
 
         return absLoc;
     }
+
+    static final double passabilityThreshold = 0.6;
+    static Direction avoidDir = null;
+
+    static void moveTowardsTarget(MapLocation targetLocation) throws GameActionException {
+        MapLocation curLocation = rc.getLocation();
+        if(curLocation.equals(targetLocation)) {
+            // target reached
+            // perform next action
+            return;
+        }
+
+        if(!rc.isReady()) {
+            // Robot can't move
+            return;
+        }
+
+        Direction dirToTarget = curLocation.directionTo(targetLocation);
+        if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
+            tryMove(dirToTarget);
+        } else {
+            if(avoidDir == null) {
+                avoidDir = dirToTarget.rotateLeft();
+            }
+            for(int i = 0; i < 8; i++) {
+                if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
+                    rc.move(avoidDir);
+                    break;
+                }
+            }
+            avoidDir = avoidDir.rotateRight();
+        }
+    }
 }
 
