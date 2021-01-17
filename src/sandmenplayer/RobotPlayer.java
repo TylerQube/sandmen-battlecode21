@@ -25,7 +25,10 @@ public strictfp class RobotPlayer {
 
     static int turnCount;
     static Set<Integer> robotIDs = new HashSet<>();
-    static int ecID;
+    // -1 means it wasn't created from an EC
+    static int ecID = -1;
+    static MapLocation targetLocation;
+    static Direction defaultDirection;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -49,6 +52,8 @@ public strictfp class RobotPlayer {
                 break;
             }
         }
+
+        defaultDirection = randomDirection();
 
         while (true) {
             turnCount += 1;
@@ -96,6 +101,11 @@ public strictfp class RobotPlayer {
         for(Integer rbtID : robotIDs) {
             if(!rc.canGetFlag(rbtID)) {
                 robotIDs.remove(rbtID);
+            } else {
+                if(rc.canSetFlag(rc.getFlag(rbtID))) {
+                    rc.setFlag(rc.getFlag(rbtID));
+                    System.out.println("move to: (" + getLocationFromFlag(rc.getFlag(rbtID)).x + ", " + getLocationFromFlag(rc.getFlag(rbtID)).y + ")");
+                }
             }
         }
     }
@@ -110,13 +120,13 @@ public strictfp class RobotPlayer {
             System.out.println("empowered");
             return;
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        processSurroundings();
+        runMovement();
     }
 
     static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        processSurroundings();
+        runMovement();
     }
 
     static void runMuckraker() throws GameActionException {
@@ -132,10 +142,45 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        processSurroundings();
+        runMovement();
     }
 
+    // Tracks closest historical distance to target MapLocation
+    static float closestToTarget;
+
+    static void runMovement() throws GameActionException {
+        // reset target location each time
+        targetLocation = null;
+        if(ecID != -1) {
+            // get flag communication from stored EC ID
+            if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
+                // default flag value is zero, ignore if it hasn't been set
+                int ecFlag = rc.getFlag(ecID);
+                if(getSignalFromFlag(ecFlag) == Signals.ATTACK) {
+                    targetLocation = getLocationFromFlag(ecFlag);
+                    // when receiving new instruction, closest historical distance is current MapLocation
+                    closestToTarget = rc.getLocation().distanceSquaredTo(targetLocation);
+                }
+            }
+            // if the EC sent a location, move towards it
+            if(targetLocation != null)
+                moveTowardsTarget(targetLocation);
+            else
+                moveTowardsTarget(rc.getLocation().add(randomDirection()));
+        }
+    }
+
+    static void processSurroundings() throws GameActionException {
+        for(RobotInfo rbt : rc.senseNearbyRobots()) {
+            // if enemy EC is found, broadcast location
+            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && !rbt.getTeam().equals(rc.getTeam())) {
+                int flagColor = getFlagFromLocation(rbt.getLocation(), Signals.ATTACK);
+                if(rc.canSetFlag(flagColor))
+                    rc.setFlag(flagColor);
+            }
+        }
+    }
     /**
      * Returns a random Direction.
      *
@@ -195,7 +240,7 @@ public strictfp class RobotPlayer {
             for(int j = -1; j <= 1; j+=1) {
                 if (Math.abs(i) == Math.abs(j)) continue;
                 MapLocation testLoc = flagLoc.translate(128*i, 128*j);
-                if(rc.getLocation().distanceSquaredTo(testLoc) < rc.getLocation().distanceSquaredTo(absLoc)) {
+                if(rc.getLocation().distanceSquaredTo(testLoc) < rc.getLocation().distanceSquaredTo(flagLoc)) {
                     flagLoc = testLoc;
                 }
             }
@@ -204,37 +249,62 @@ public strictfp class RobotPlayer {
         return flagLoc;
     }
 
+    static int getSignalFromFlag(int flag) {
+        return flag >> 14;
+    }
+
     static final double passabilityThreshold = 0.6;
     static Direction avoidDir = null;
 
     static void moveTowardsTarget(MapLocation targetLocation) throws GameActionException {
         MapLocation curLocation = rc.getLocation();
-        if(curLocation.equals(targetLocation)) {
-            // target reached
-            // perform next action
-            return;
-        }
 
         if(!rc.isReady()) {
             // Robot can't move
             return;
         }
 
-        Direction dirToTarget = curLocation.directionTo(targetLocation);
-        if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
-            tryMove(dirToTarget);
-        } else {
-            if(avoidDir == null) {
-                avoidDir = dirToTarget.rotateLeft();
-            }
-            for(int i = 0; i < 8; i++) {
-                if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
-                    rc.move(avoidDir);
-                    break;
+        Direction testDir = curLocation.directionTo(targetLocation);
+        // test all directions starting with direct path to target location
+        for(int i = 0; i < 8; i++) {
+            // only move if location is above passability threshold
+            if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
+                // only move if the robot will be closer to the target
+                if(curLocation.add(testDir).distanceSquaredTo(targetLocation) < closestToTarget && rc.canMove(testDir) && rc.isReady()) {
+                    rc.move(testDir);
+                    // update new closest distance to target
+                    closestToTarget = curLocation.add(testDir).distanceSquaredTo(targetLocation);
+                    return;
                 }
             }
-            avoidDir = avoidDir.rotateRight();
+            testDir = testDir.rotateRight();
         }
+
+        testDir = curLocation.directionTo(targetLocation);
+        // if there is no direct square to get closer, keep the obstacle on the left
+        for(int i = 0; i < 8; i++) {
+            if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
+                if (rc.canMove(testDir) && rc.isReady()) {
+                    rc.move(testDir);
+                }
+            }
+            testDir = testDir.rotateRight();
+        }
+
+//        if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
+//            tryMove(dirToTarget);
+//        } else {
+//            if(avoidDir == null) {
+//                avoidDir = dirToTarget.rotateLeft();
+//            }
+//            for(int i = 0; i < 8; i++) {
+//                if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
+//                    rc.move(avoidDir);
+//                    break;
+//                }
+//            }
+//            avoidDir = avoidDir.rotateRight();
+//        }
     }
 }
 
