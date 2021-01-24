@@ -123,57 +123,5 @@ public strictfp class RobotPlayer {
 
     public static final double passabilityThreshold = 0.6;
     public static Direction avoidDir = null;
-
-    public static void moveTowardsTarget(MapLocation targetLocation) throws GameActionException {
-        MapLocation curLocation = rc.getLocation();
-
-        if(!rc.isReady()) {
-            // Robot can't move
-            return;
-        }
-
-        Direction testDir = curLocation.directionTo(targetLocation);
-        // test all directions starting with direct path to target location
-        for(int i = 0; i < 8; i++) {
-            // only move if location is above passability threshold
-            if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
-                // only move if the robot will be closer to the target
-                if(curLocation.add(testDir).distanceSquaredTo(targetLocation) < closestToTarget && rc.canMove(testDir) && rc.isReady()) {
-                    rc.move(testDir);
-                    // update new closest distance to target
-                    closestToTarget = curLocation.add(testDir).distanceSquaredTo(targetLocation);
-                    return;
-                }
-            }
-            testDir = testDir.rotateRight();
-        }
-
-        testDir = curLocation.directionTo(targetLocation);
-        // if there is no direct square to get closer, keep the obstacle on the left
-        for(int i = 0; i < 8; i++) {
-            if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
-                if (rc.canMove(testDir) && rc.isReady()) {
-                    rc.move(testDir);
-                }
-            }
-            testDir = testDir.rotateRight();
-        }
-
-/*      if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
-          tryMove(dirToTarget);
-      } else {
-          if(avoidDir == null) {
-               avoidDir = dirToTarget.rotateLeft();
-          }
-          for(int i = 0; i < 8; i++) {
-              if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
-                  rc.move(avoidDir);
-                 break;
-              }
-           }
-          avoidDir = avoidDir.rotateRight();
-        }
-*/
-    }
 }
 
