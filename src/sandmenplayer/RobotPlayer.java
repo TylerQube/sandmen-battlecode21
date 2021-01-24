@@ -1,16 +1,22 @@
 package sandmenplayer;
+import java.util.Set;
+import java.util.HashSet;
 import battlecode.common.*;
+import sandmenplayer.units.ECenter;
+import sandmenplayer.units.Muckraker;
+import sandmenplayer.units.Politician;
+import sandmenplayer.units.Slanderer;
 
 public strictfp class RobotPlayer {
-    static RobotController rc;
+    public static RobotController rc;
 
-    static final RobotType[] spawnableRobot = {
+    public static final RobotType[] spawnableRobot = {
             RobotType.POLITICIAN,
             RobotType.SLANDERER,
             RobotType.MUCKRAKER,
     };
 
-    static final Direction[] directions = {
+    public static final Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
             Direction.EAST,
@@ -21,7 +27,12 @@ public strictfp class RobotPlayer {
             Direction.NORTHWEST,
     };
 
-    static int turnCount;
+    public static int turnCount;
+    public static Set<Integer> robotIDs = new HashSet<>();
+    // -1 means it wasn't created from an EC
+    public static int ecID = -1;
+    public static MapLocation targetLocation;
+    public static Direction defaultDirection;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -37,6 +48,18 @@ public strictfp class RobotPlayer {
         turnCount = 0;
 
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
+
+        // save EC ID when created
+        defaultDirection = randomDirection();
+        for(RobotInfo rbt : rc.senseNearbyRobots(1)) {
+            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && rbt.getTeam().equals(rc.getTeam())) {
+                ecID = rbt.getID();
+                // move opp direction from EC if possible
+                defaultDirection = rc.getLocation().directionTo(rbt.getLocation()).rotateRight().rotateRight().rotateRight().rotateRight();
+                break;
+            }
+        }
+
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
@@ -45,10 +68,10 @@ public strictfp class RobotPlayer {
                 // You may rewrite this into your own control structure if you wish.
                 System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
-                    case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
-                    case POLITICIAN:           runPolitician();          break;
-                    case SLANDERER:            runSlanderer();           break;
-                    case MUCKRAKER:            runMuckraker();           break;
+                    case ENLIGHTENMENT_CENTER: ECenter.runEnlightenmentCenter(); break;
+                    case POLITICIAN:           Politician.runPolitician();          break;
+                    case SLANDERER:            Slanderer.runSlanderer();           break;
+                    case MUCKRAKER:            Muckraker.runMuckraker();           break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -61,60 +84,16 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
-        for (Direction dir : directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
-            } else {
-                break;
-            }
-        }
-    }
+    // Tracks closest historical distance to target MapLocation
+    public static float closestToTarget;
 
-    static void runPolitician() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
-            return;
-        }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-    }
-
-    static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-    }
-
-    static void runMuckraker() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
-            if (robot.type.canBeExposed()) {
-                // It's a slanderer... go get them!
-                if (rc.canExpose(robot.location)) {
-                    System.out.println("e x p o s e d");
-                    rc.expose(robot.location);
-                    return;
-                }
-            }
-        }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-    }
 
     /**
      * Returns a random Direction.
      *
      * @return a random Direction
      */
-    static Direction randomDirection() {
+    public static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
 
@@ -123,7 +102,7 @@ public strictfp class RobotPlayer {
      *
      * @return a random RobotType
      */
-    static RobotType randomSpawnableRobotType() {
+    public static RobotType randomSpawnableRobotType() {
         return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
     }
 
@@ -134,12 +113,15 @@ public strictfp class RobotPlayer {
      * @return true if a move was performed
      * @throws GameActionException
      */
-    static boolean tryMove(Direction dir) throws GameActionException {
+    public static boolean tryMove(Direction dir) throws GameActionException {
         System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             return true;
         } else return false;
     }
+
+    public static final double passabilityThreshold = 0.6;
+    public static Direction avoidDir = null;
 }
 
