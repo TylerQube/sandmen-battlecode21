@@ -28,7 +28,7 @@ public strictfp class RobotPlayer {
     };
 
     public static int turnCount;
-    public static Set<Integer> robotIDs = new HashSet<>();
+
     // -1 means it wasn't created from an EC
     public static int ecID = -1;
     public static MapLocation targetLocation;

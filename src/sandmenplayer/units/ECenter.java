@@ -1,30 +1,68 @@
 package sandmenplayer.units;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 import sandmenplayer.Communication;
 import sandmenplayer.RobotPlayer;
+import sandmenplayer.Signals;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ECenter extends RobotPlayer {
+    public static Set<Integer> robotIDs = new HashSet<>();
+
     public static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
+        RobotType toBuild = null;
+        if (turnCount == 1) {
+            toBuild = RobotType.SLANDERER;
+        } else {
+            toBuild = RobotType.MUCKRAKER;
+        }
+
+        int influenceGive = 1;
+        boolean built = false;
         for (Direction dir : directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
+            if (rc.canBuildRobot(toBuild, dir, influenceGive)) {
+                rc.buildRobot(toBuild, dir, influenceGive);
+                built = true;
                 // save robot ID after building
-                for(RobotInfo rbt : rc.senseNearbyRobots(1)) {
-                    // only save ID if it is friendly and matches type of built robot
-                    if(rbt.getTeam().equals(rc.getTeam()) && rbt.getType().equals(toBuild)) {
-                        robotIDs.add(rbt.getID());
-                    }
-                }
-            } else {
-                break;
+                int newID = rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID();
+                robotIDs.add(newID);
             }
         }
+        if(!built)
+            System.out.println("EC: I couldn't build anything!");
+
+        boolean defenseFull = true;
+        MapLocation testLoc;
+        // Check if EC has a full ring of defenses
+        for (Direction dir : directions) {
+            testLoc = rc.getLocation().add(dir);
+            if (!rc.isLocationOccupied(testLoc) && rc.onTheMap(testLoc))
+                defenseFull = false;
+        }
+
+        // signal robots to move if defense is complete
+        if (defenseFull) {
+            for (Direction dir : directions) {
+                testLoc = rc.getLocation().add(dir);
+                // if location is valid and is occupied by an ally
+                if (rc.onTheMap(testLoc) && rc.isLocationOccupied(testLoc) && Communication.isAlly(rc.senseRobotAtLocation(testLoc))) {
+                    int flag = Communication.getFlagFromLocation(testLoc, Signals.BEGIN_MOVING);
+                    if(rc.canSetFlag(flag))
+                        rc.setFlag(flag);
+                }
+
+            }
+            /*do {
+                signalDir = randomDirection();
+                signalLoc = rc.getLocation().add(signalDir);
+            } while(rc.onTheMap(signalLoc) && rc.senseRobotAtLocation(signalLoc).getTeam().equals(rc.getTeam())) {
+
+            }*/
+
+        }
+
 
         // remove robot ID if it is destroyed
         for(Integer rbtID : robotIDs) {

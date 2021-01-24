@@ -1,6 +1,7 @@
 package sandmenplayer;
 
 import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
 
 public class Communication extends RobotPlayer {
     public static int getFlagFromLocation(MapLocation loc, int info) {
@@ -40,4 +41,9 @@ public class Communication extends RobotPlayer {
     public static int getSignalFromFlag(int flag) {
         return flag >> 14;
     }
+
+    public static boolean isAlly(RobotInfo rbtInfo) {
+        return rbtInfo.getTeam().equals(rc.getTeam());
+    }
+
 }

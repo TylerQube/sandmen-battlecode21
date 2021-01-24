@@ -5,20 +5,38 @@ import battlecode.common.*;
 public class Movement extends RobotPlayer {
 
     public static void runMovement() throws GameActionException {
+        // units will stay put by default unless signalled by EC
+        boolean shouldMove;
+        switch(rc.getType()) {
+            case MUCKRAKER:
+                shouldMove = false;
+                break;
+            default:
+                shouldMove = true;
+                break;
+        }
         // reset target location each time
         targetLocation = null;
+
         if(ecID != -1) {
             // get flag communication from stored EC ID
             if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
                 // default flag value is zero, ignore if it hasn't been set
                 int ecFlag = rc.getFlag(ecID);
-                if(Communication.getSignalFromFlag(ecFlag) == Signals.ATTACK) {
-                    targetLocation = Communication.getLocationFromFlag(ecFlag);
-                    // when receiving new instruction, closest historical distance is current MapLocation
-                    closestToTarget = rc.getLocation().distanceSquaredTo(targetLocation);
+                switch(Communication.getSignalFromFlag(ecFlag)) {
+                    case Signals.BEGIN_MOVING:
+                        if(Communication.getLocationFromFlag(ecFlag).equals(rc.getLocation()))
+                            shouldMove = true;
+                        break;
+                    case Signals.ATTACK:
+                        targetLocation = Communication.getLocationFromFlag(ecFlag);
+                        // when receiving new instruction, closest historical distance is current MapLocation
+                        closestToTarget = rc.getLocation().distanceSquaredTo(targetLocation);
                 }
             }
-            // if the EC sent a location, move towards it
+        }
+        // if the EC sent a location, move towards it
+        if(shouldMove) {
             if(targetLocation != null)
                 moveTowardsTarget(targetLocation);
             else
