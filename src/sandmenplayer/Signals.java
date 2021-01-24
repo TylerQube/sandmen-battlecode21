@@ -1,5 +1,9 @@
 package sandmenplayer;
 
 public class Signals {
-    public static int ATTACK = 1;
+    public final static int
+            ATTACK = 1,
+            CLAIM = 2
+            ;
+
 }
