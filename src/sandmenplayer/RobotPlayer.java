@@ -159,20 +159,21 @@ public strictfp class RobotPlayer {
             testDir = testDir.rotateRight();
         }
 
-//        if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
-//            tryMove(dirToTarget);
-//        } else {
-//            if(avoidDir == null) {
-//                avoidDir = dirToTarget.rotateLeft();
-//            }
-//            for(int i = 0; i < 8; i++) {
-//                if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
-//                    rc.move(avoidDir);
-//                    break;
-//                }
-//            }
-//            avoidDir = avoidDir.rotateRight();
-//        }
+/*      if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
+          tryMove(dirToTarget);
+      } else {
+          if(avoidDir == null) {
+               avoidDir = dirToTarget.rotateLeft();
+          }
+          for(int i = 0; i < 8; i++) {
+              if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
+                  rc.move(avoidDir);
+                 break;
+              }
+           }
+          avoidDir = avoidDir.rotateRight();
+        }
+*/
     }
 }
 
