@@ -13,16 +13,6 @@ public class Movement extends RobotPlayer {
             if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
                 // default flag value is zero, ignore if it hasn't been set
                 int ecFlag = rc.getFlag(ecID);
-                switch(Communication.getSignalFromFlag(ecFlag)) {
-                    case Signals.BEGIN_MOVING:
-                        if(Communication.getLocationFromFlag(ecFlag).equals(rc.getLocation()))
-                            shouldMove = true;
-                        break;
-                    case Signals.CLAIM:
-                        targetLocation = Communication.getLocationFromFlag(ecFlag);
-                        // when receiving new instruction, closest historical distance is current MapLocation
-                        closestToTarget = rc.getLocation().distanceSquaredTo(targetLocation);
-                }
             }
         }
         // if the EC sent a location, move towards it
@@ -36,13 +26,39 @@ public class Movement extends RobotPlayer {
     }
 
     public static void processSurroundings() throws GameActionException {
+        int flagColor = -1;
         for(RobotInfo rbt : rc.senseNearbyRobots()) {
-            // if neutral EC is found, broadcast location
-            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && !rbt.getTeam().isPlayer()) {
-                int flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.CLAIM);
-                if(rc.canSetFlag(flagColor))
-                    rc.setFlag(flagColor);
+            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER)) {
+                if(rbt.getTeam().equals(rc.getTeam().opponent())) {
+                    flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_ENEMY);
+                    break;
+                }
+                if(!rbt.getTeam().isPlayer()) {
+                    flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_NEUTRAL);
+                    break;
+                }
             }
+            else if(rbt.getType().equals(RobotType.SLANDERER)) {
+                if(rbt.getTeam().equals(rc.getTeam().opponent())) {
+                    flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.SLANDERER_ENEMY);
+                    break;
+                }
+            }
+            else if(rbt.getType().equals(RobotType.POLITICIAN)) {
+                if(rbt.getTeam().equals(rc.getTeam().opponent())) {
+                    flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.POLITICIAN_ENEMY);
+                    break;
+                }
+            }
+            else if(rbt.getType().equals(RobotType.MUCKRAKER)) {
+                if(rbt.getTeam().equals(rc.getTeam().opponent())) {
+                    flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.MUCKRAKER_ENEMY);
+                    break;
+                }
+            }
+
+            if(flagColor != -1 && rc.canSetFlag(flagColor))
+                rc.setFlag(flagColor);
         }
 
         for(RobotInfo rbt : rc.senseNearbyRobots()) {

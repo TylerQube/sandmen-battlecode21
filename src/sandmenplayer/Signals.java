@@ -2,9 +2,11 @@ package sandmenplayer;
 
 public class Signals {
     public final static int
-            ATTACK = 1,
-            CLAIM = 2,
-            BEGIN_MOVING = 3
+            EC_ENEMY = 1,
+            SLANDERER_ENEMY = 2,
+            POLITICIAN_ENEMY = 3,
+            MUCKRAKER_ENEMY = 4,
+            EC_NEUTRAL = 5
             ;
 
 }
