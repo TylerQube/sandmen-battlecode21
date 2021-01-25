@@ -12,11 +12,14 @@ public class ECenter extends RobotPlayer {
     public static Set<Integer> robotIDs = new HashSet<>();
     public static Set<MapLocation> enemyECLocations = new HashSet<>();
 
+    public static MapLocation slandererHideaway = null;
+
     public static void runEnlightenmentCenter() throws GameActionException {
-        if(robotIDs.size() == 0) {
+        if(enemyECLocations.size() == 0) {
             runEarlyPhase();
-        } else if(robotIDs.size() > 0) {
+        } else if(enemyECLocations.size() > 0) {
             // attack phase
+            System.out.println("ENEMY EC FOUND at " + enemyECLocations.toArray()[0].toString());
         }
     }
 
@@ -64,6 +67,18 @@ public class ECenter extends RobotPlayer {
                 // enemy EC found, store location
                 enemyECLocations.add(signalLoc);
                 break;
+            case Signals.SLANDERER_EDGE:
+                MapLocation curLoc = rc.getLocation();
+                // set new slanderer hideaway if closer than current location
+                if(slandererHideaway == null || curLoc.distanceSquaredTo(signalLoc) < rc.getLocation().distanceSquaredTo(slandererHideaway)) {
+                    slandererHideaway = signalLoc;
+                    if(rc.canSetFlag(flag)) {
+                        rc.setFlag(flag);
+                        System.out.println("New slanderer loc at " + slandererHideaway.toString());
+                    }
+
+                }
+
         }
     }
 }

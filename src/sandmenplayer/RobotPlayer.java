@@ -31,7 +31,6 @@ public strictfp class RobotPlayer {
 
     // -1 means it wasn't created from an EC
     public static int ecID = -1;
-    public static MapLocation targetLocation;
     public static Direction defaultDirection;
 
     public static boolean shouldMove;

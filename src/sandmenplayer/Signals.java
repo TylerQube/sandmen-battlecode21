@@ -6,7 +6,9 @@ public class Signals {
             SLANDERER_ENEMY = 2,
             POLITICIAN_ENEMY = 3,
             MUCKRAKER_ENEMY = 4,
-            EC_NEUTRAL = 5
+            EC_NEUTRAL = 5,
+
+            SLANDERER_EDGE = 6
             ;
 
 }

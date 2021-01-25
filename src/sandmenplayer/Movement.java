@@ -4,17 +4,12 @@ import battlecode.common.*;
 
 public class Movement extends RobotPlayer {
 
+    public static MapLocation targetLocation = null;
+
     public static void runMovement() throws GameActionException {
         // reset target location each time
-        targetLocation = null;
 
-        if(ecID != -1) {
-            // get flag communication from stored EC ID
-            if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
-                // default flag value is zero, ignore if it hasn't been set
-                int ecFlag = rc.getFlag(ecID);
-            }
-        }
+        receiveEcFlag();
         // if the EC sent a location, move towards it
         if(shouldMove) {
             if(targetLocation != null)
@@ -25,9 +20,44 @@ public class Movement extends RobotPlayer {
         }
     }
 
+    public static void receiveEcFlag() throws GameActionException {
+        if(ecID != -1) {
+            // get flag communication from stored EC ID
+            if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
+                // default flag value is zero, ignore if it hasn't been set
+                int ecFlag = rc.getFlag(ecID);
+
+                switch(Communication.getSignalFromFlag(ecFlag)) {
+                    case Signals.SLANDERER_EDGE:
+                        if(!rc.getType().equals(RobotType.SLANDERER))
+                            break;
+                        targetLocation = Communication.getLocationFromFlag(ecFlag);
+                        System.out.println("My target location is " + targetLocation.toString());
+                }
+            }
+        }
+    }
+
     public static void processSurroundings() throws GameActionException {
         int flagColor = -1;
+        // search all directions for edge of map
+        MapLocation testLocation;
+        for(int i = 0; i < 9; i++) {
+            testLocation = rc.getLocation().add(Direction.allDirections()[i]);
+            if(!rc.onTheMap(testLocation)) {
+                // robot is on edge/corner
+                // send location to EC so slanderers can be redirected
+                flagColor = Communication.getFlagFromLocation(rc.getLocation(), Signals.SLANDERER_EDGE);
+            }
+        }
+
+        // unit signal flags overrides detection of slanderer target location
         for(RobotInfo rbt : rc.senseNearbyRobots()) {
+            // if slanderer, run away from all enemies
+            if(rc.getType().equals(RobotType.SLANDERER)) {
+                defaultDirection = rc.getLocation().directionTo(rbt.getLocation()).opposite().rotateRight();
+            }
+            /* SEND FLAG SIGNAL BASED ON DETECTED UNIT TYPE */
             if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_ENEMY);
@@ -57,11 +87,7 @@ public class Movement extends RobotPlayer {
                 }
             }
 
-            if(flagColor != -1 && rc.canSetFlag(flagColor))
-                rc.setFlag(flagColor);
-        }
-
-        for(RobotInfo rbt : rc.senseNearbyRobots()) {
+            // If adjacent to friendly EC, check if ring of defense is complete
             if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && Communication.isAlly(rbt)) {
                 if(rbt.getLocation().isAdjacentTo(rc.getLocation())) {
                     boolean defenseFull = true;
@@ -81,6 +107,9 @@ public class Movement extends RobotPlayer {
                 }
             }
         }
+        // send flag signal for EC to see
+        if(flagColor != -1 && rc.canSetFlag(flagColor))
+            rc.setFlag(flagColor);
     }
 
     public static void bugPath(Direction targetDir) throws GameActionException {
@@ -137,6 +166,8 @@ public class Movement extends RobotPlayer {
         Direction testDir = curLocation.directionTo(targetLocation);
         // test all directions starting with direct path to target location
         for(int i = 0; i < 8; i++) {
+            if(!rc.onTheMap(curLocation.add(testDir)))
+                continue;
             // only move if location is above passability threshold
             if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
                 // only move if the robot will be closer to the target
@@ -160,22 +191,6 @@ public class Movement extends RobotPlayer {
             }
             testDir = testDir.rotateRight();
         }
-
-/*      if(rc.isReady() && rc.sensePassability(rc.getLocation().add(dirToTarget)) >= passabilityThreshold) {
-          tryMove(dirToTarget);
-      } else {
-          if(avoidDir == null) {
-               avoidDir = dirToTarget.rotateLeft();
-          }
-          for(int i = 0; i < 8; i++) {
-              if(rc.canMove(avoidDir) && rc.sensePassability(rc.getLocation().add(avoidDir)) > passabilityThreshold) {
-                  rc.move(avoidDir);
-                 break;
-              }
-           }
-          avoidDir = avoidDir.rotateRight();
-        }
-*/
     }
 
 }
