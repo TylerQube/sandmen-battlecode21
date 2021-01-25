@@ -6,6 +6,7 @@ import sandmenplayer.RobotPlayer;
 import sandmenplayer.Signals;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class ECenter extends RobotPlayer {
@@ -60,9 +61,10 @@ public class ECenter extends RobotPlayer {
 
     public static void checkExistingRobots() throws GameActionException {
         // remove robot ID if it is destroyed
-        for(Integer rbtID : robotIDs) {
+        for(Iterator<Integer> itr = robotIDs.iterator(); itr.hasNext();) {
+            Integer rbtID = itr.next();
             if(!rc.canGetFlag(rbtID)) {
-                robotIDs.remove(rbtID);
+                itr.remove();
             } else {
                 processRobotFlag(rc.getFlag(rbtID));
             }
