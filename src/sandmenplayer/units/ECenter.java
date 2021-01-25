@@ -44,23 +44,21 @@ public class ECenter extends RobotPlayer {
 
         // signal robots to move if defense is complete
         if (defenseFull) {
+            System.out.println("All adjacent tiles are full!");
             for (Direction dir : directions) {
                 testLoc = rc.getLocation().add(dir);
                 // if location is valid and is occupied by an ally
                 if (rc.onTheMap(testLoc) && rc.isLocationOccupied(testLoc) && Communication.isAlly(rc.senseRobotAtLocation(testLoc))) {
                     int flag = Communication.getFlagFromLocation(testLoc, Signals.BEGIN_MOVING);
-                    if(rc.canSetFlag(flag))
+                    if(rc.canSetFlag(flag)) {
                         rc.setFlag(flag);
+                        break;
+                    }
                 }
 
             }
-            /*do {
-                signalDir = randomDirection();
-                signalLoc = rc.getLocation().add(signalDir);
-            } while(rc.onTheMap(signalLoc) && rc.senseRobotAtLocation(signalLoc).getTeam().equals(rc.getTeam())) {
-
-            }*/
-
+        } else {
+            System.out.println("Defense is not full!");
         }
 
 
@@ -68,12 +66,12 @@ public class ECenter extends RobotPlayer {
         for(Integer rbtID : robotIDs) {
             if(!rc.canGetFlag(rbtID)) {
                 robotIDs.remove(rbtID);
-            } else {
+            }/* else {
                 if(rc.canSetFlag(rc.getFlag(rbtID))) {
                     rc.setFlag(rc.getFlag(rbtID));
                     System.out.println("move to: (" + Communication.getLocationFromFlag(rc.getFlag(rbtID)).x + ", " + Communication.getLocationFromFlag(rc.getFlag(rbtID)).y + ")");
                 }
-            }
+            }*/
         }
     }
 }

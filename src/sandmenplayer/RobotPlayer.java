@@ -34,6 +34,8 @@ public strictfp class RobotPlayer {
     public static MapLocation targetLocation;
     public static Direction defaultDirection;
 
+    public static boolean shouldMove;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -49,13 +51,25 @@ public strictfp class RobotPlayer {
 
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
 
+        // units will stay put by default unless signalled by EC
+
+        switch(rc.getType()) {
+            case MUCKRAKER:
+                shouldMove = false;
+                break;
+            default:
+                shouldMove = true;
+                break;
+        }
+
         // save EC ID when created
-        defaultDirection = randomDirection();
+        defaultDirection = null;
         for(RobotInfo rbt : rc.senseNearbyRobots(1)) {
             if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && rbt.getTeam().equals(rc.getTeam())) {
                 ecID = rbt.getID();
                 // move opp direction from EC if possible
-                defaultDirection = rc.getLocation().directionTo(rbt.getLocation()).rotateRight().rotateRight().rotateRight().rotateRight();
+                Direction dirToEC = rc.getLocation().directionTo(rbt.getLocation());
+                defaultDirection = dirToEC.opposite();
                 break;
             }
         }
@@ -66,7 +80,6 @@ public strictfp class RobotPlayer {
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You may rewrite this into your own control structure if you wish.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case ENLIGHTENMENT_CENTER: ECenter.runEnlightenmentCenter(); break;
                     case POLITICIAN:           Politician.runPolitician();          break;

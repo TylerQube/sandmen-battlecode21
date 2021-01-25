@@ -5,16 +5,6 @@ import battlecode.common.*;
 public class Movement extends RobotPlayer {
 
     public static void runMovement() throws GameActionException {
-        // units will stay put by default unless signalled by EC
-        boolean shouldMove;
-        switch(rc.getType()) {
-            case MUCKRAKER:
-                shouldMove = false;
-                break;
-            default:
-                shouldMove = true;
-                break;
-        }
         // reset target location each time
         targetLocation = null;
 
@@ -28,7 +18,7 @@ public class Movement extends RobotPlayer {
                         if(Communication.getLocationFromFlag(ecFlag).equals(rc.getLocation()))
                             shouldMove = true;
                         break;
-                    case Signals.ATTACK:
+                    case Signals.CLAIM:
                         targetLocation = Communication.getLocationFromFlag(ecFlag);
                         // when receiving new instruction, closest historical distance is current MapLocation
                         closestToTarget = rc.getLocation().distanceSquaredTo(targetLocation);
@@ -40,7 +30,8 @@ public class Movement extends RobotPlayer {
             if(targetLocation != null)
                 moveTowardsTarget(targetLocation);
             else
-                moveTowardsTarget(rc.getLocation().add(randomDirection()));
+                System.out.println("I'm trying to move " + defaultDirection.toString());
+                bugPath(defaultDirection);
         }
     }
 
@@ -55,8 +46,51 @@ public class Movement extends RobotPlayer {
         }
     }
 
+    public static void bugPath(Direction targetDir) throws GameActionException {
+        if(!rc.isReady()) {
+            // Robot can't move
+            return;
+        }
+
+        MapLocation curLocation = rc.getLocation();
+        Direction testDirection = targetDir;
+
+        boolean isRight = true;
+        // search adjacent tiles in order of right, left, right, left
+        for(int rotateAmt = 0; rotateAmt <= 7; rotateAmt += 1) {
+            for(int i = 0; i < rotateAmt; i++) {
+                testDirection = isRight ? testDirection.rotateRight() : testDirection.rotateLeft();
+            }
+
+            // test the direction
+            if(rc.onTheMap(curLocation.add(testDirection))) {
+                if(rc.sensePassability(curLocation.add(testDirection)) > passabilityThreshold) {
+                    if (rc.canMove(testDirection) && rc.isReady()) {
+                        rc.move(testDirection);
+                        System.out.println("Moved " + testDirection.toString());
+                        defaultDirection = testDirection;
+                        return;
+                    } else {
+                        System.out.println("Can't move " + testDirection.toString());
+                    }
+                }
+            } else {
+                System.out.println(testDirection.toString() + " is off the map");
+            }
+
+            // flip rotation direction
+            isRight = !isRight;
+        }
+    }
+
     public static void moveTowardsTarget(MapLocation targetLocation) throws GameActionException {
         MapLocation curLocation = rc.getLocation();
+
+        // invalid target location
+        if(!rc.onTheMap(targetLocation)) {
+            targetLocation = null;
+            return;
+        }
 
         if(!rc.isReady()) {
             // Robot can't move
@@ -106,4 +140,5 @@ public class Movement extends RobotPlayer {
         }
 */
     }
+
 }
