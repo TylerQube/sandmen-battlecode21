@@ -13,11 +13,11 @@ public class ECenter extends RobotPlayer {
     public static Set<MapLocation> enemyECLocations = new HashSet<>();
 
     public static void runEnlightenmentCenter() throws GameActionException {
-        if(robotIDs.size() == 0) {
+        if(turnCount < 18) {
             runEarlyPhase();
-        } else if(robotIDs.size() > 0) {
-            // attack phase
+            return;
         }
+        runDefaultPhase();
     }
 
     public static void runEarlyPhase() throws GameActionException {
@@ -31,7 +31,17 @@ public class ECenter extends RobotPlayer {
         tryBuildRobot(toBuild);
         checkExistingRobots();
     }
+    public static void runDefaultPhase() throws GameActionException {
+        RobotType toBuild = null;
+        if ((turnCount % 2) == 0) {
+            toBuild = RobotType.SLANDERER;
+        } else if ((turnCount % 2) == 1) {
+            toBuild = RobotType.MUCKRAKER;
+        }
 
+        tryBuildRobot(toBuild);
+        checkExistingRobots();
+    }
     public static void tryBuildRobot(RobotType rbtType) throws GameActionException {
         int influenceGive = 1;
         for (Direction dir : directions) {
