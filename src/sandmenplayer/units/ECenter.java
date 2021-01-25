@@ -22,11 +22,13 @@ public class ECenter extends RobotPlayer {
         slandererInf = Math.max(5, rc.getInfluence()/50);
 
         if(enemyECLocations.size() > 0 && rc.getInfluence() >= 100) {
+            System.out.println("ATTACK PHASE");
             runAttackPhase();
-            System.out.println("ENEMY EC FOUND at " + enemyECLocations.toArray()[0].toString());
         } else if(turnCount < 18) {
+            System.out.println("EARLY PHASE");
             runEarlyPhase();
         } else {
+            System.out.println("DEFAULT PHASE");
             runDefaultPhase();
         }
     }
@@ -57,9 +59,12 @@ public class ECenter extends RobotPlayer {
         if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
             currentGiveInf = slandererInf;
+            System.out.println("Trying to spawn slandeerer");
         } else {
             toBuild = RobotType.MUCKRAKER;
             currentGiveInf = muckInf;
+            System.out.println("Trying to spawn muckraker");
+
         }
 
         if(tryBuildRobot(toBuild, currentGiveInf))

@@ -50,6 +50,12 @@ public class Movement extends RobotPlayer {
                                 targetLocation = flagLoc;
                                 targetType = flagSignal;
                                 break;
+                            case MUCKRAKER:
+                                if(Math.random() > 0.6) {
+                                    targetLocation = flagLoc;
+                                    targetType = flagSignal;
+                                }
+                                break;
                         }
                         break;
                 }
@@ -72,6 +78,7 @@ public class Movement extends RobotPlayer {
 
         // unit signal flags overrides detection of slanderer target location
         for(RobotInfo rbt : rc.senseNearbyRobots()) {
+            System.out.println("I see a " + rbt.getType().toString());
             // if slanderer, run away from all enemies
             if(rc.getType().equals(RobotType.SLANDERER)) {
                 defaultDirection = rc.getLocation().directionTo(rbt.getLocation()).opposite().rotateRight();
@@ -80,29 +87,25 @@ public class Movement extends RobotPlayer {
             if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_ENEMY);
-                    break;
+                    System.out.println("ENEMY EC FOUND");
                 }
                 if(!rbt.getTeam().isPlayer()) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_NEUTRAL);
-                    break;
                 }
             }
             else if(rbt.getType().equals(RobotType.SLANDERER)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.SLANDERER_ENEMY);
-                    break;
                 }
             }
             else if(rbt.getType().equals(RobotType.POLITICIAN)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.POLITICIAN_ENEMY);
-                    break;
                 }
             }
             else if(rbt.getType().equals(RobotType.MUCKRAKER)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.MUCKRAKER_ENEMY);
-                    break;
                 }
             }
 
