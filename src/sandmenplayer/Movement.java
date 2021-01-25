@@ -20,7 +20,10 @@ public class Movement extends RobotPlayer {
             if(targetLocation != null)
                 moveTowardsTarget(targetLocation);
             else
-                System.out.println("I'm trying to move " + defaultDirection.toString());
+                if(defaultDirection == null)
+                    System.out.println("I am not trying to move anywhere.");
+                else
+                    System.out.println("I'm trying to move " + defaultDirection.toString());
                 bugPath(defaultDirection);
         }
     }
