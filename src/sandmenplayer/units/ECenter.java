@@ -12,6 +12,9 @@ public class ECenter extends RobotPlayer {
     public static Set<Integer> robotIDs = new HashSet<>();
 
     public static void runEnlightenmentCenter() throws GameActionException {
+        runEarlyPhase();
+    }
+    public static void runEarlyPhase() throws GameActionException {
         RobotType toBuild = null;
         if (turnCount == 1) {
             toBuild = RobotType.SLANDERER;
