@@ -6,6 +6,7 @@ import sandmenplayer.RobotPlayer;
 import sandmenplayer.Signals;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class ECenter extends RobotPlayer {
@@ -15,11 +16,13 @@ public class ECenter extends RobotPlayer {
     public static MapLocation slandererHideaway = null;
 
     public static void runEnlightenmentCenter() throws GameActionException {
-        if(enemyECLocations.size() == 0) {
-            runEarlyPhase();
-        } else if(enemyECLocations.size() > 0) {
+        if(enemyECLocations.size() > 0) {
             // attack phase
             System.out.println("ENEMY EC FOUND at " + enemyECLocations.toArray()[0].toString());
+        } else if(turnCount < 18) {
+            runEarlyPhase();
+        } else {
+            runDefaultPhase();
         }
     }
 
@@ -34,8 +37,23 @@ public class ECenter extends RobotPlayer {
         tryBuildRobot(toBuild);
         checkExistingRobots();
     }
+    
+    static boolean muckBuild = false;
+    public static void runDefaultPhase() throws GameActionException {
+        RobotType toBuild = null;
+        if (!muckBuild) {
+            toBuild = RobotType.SLANDERER;
+        } else {
+            toBuild = RobotType.MUCKRAKER;
+        }
 
-    public static void tryBuildRobot(RobotType rbtType) throws GameActionException {
+        if(tryBuildRobot(toBuild))
+            muckBuild = !muckBuild;
+        checkExistingRobots();
+    }
+
+    // return whether robot was built successfully
+    public static boolean tryBuildRobot(RobotType rbtType) throws GameActionException {
         int influenceGive = 1;
         for (Direction dir : directions) {
             if (rc.canBuildRobot(rbtType, dir, influenceGive)) {
@@ -43,15 +61,18 @@ public class ECenter extends RobotPlayer {
                 // save robot ID after building
                 int newID = rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID();
                 robotIDs.add(newID);
+                return true;
             }
         }
+        return false;
     }
 
     public static void checkExistingRobots() throws GameActionException {
         // remove robot ID if it is destroyed
-        for(Integer rbtID : robotIDs) {
+        for(Iterator<Integer> itr = robotIDs.iterator(); itr.hasNext();) {
+            Integer rbtID = itr.next();
             if(!rc.canGetFlag(rbtID)) {
-                robotIDs.remove(rbtID);
+                itr.remove();
             } else {
                 processRobotFlag(rc.getFlag(rbtID));
             }
