@@ -5,21 +5,24 @@ import battlecode.common.*;
 public class Movement extends RobotPlayer {
 
     public static MapLocation targetLocation = null;
+    public static int targetType = -1;
 
     public static void runMovement() throws GameActionException {
-        // reset target location each time
-
         receiveEcFlag();
         // if the EC sent a location, move towards it
         if(shouldMove) {
-            if(targetLocation != null)
+            if(targetLocation != null) {
                 moveTowardsTarget(targetLocation);
-            else
+                System.out.println("My target location is " + targetLocation.toString());
+            } else {
+                targetType = -1;
                 if(defaultDirection == null)
                     System.out.println("I am not trying to move anywhere.");
                 else
                     System.out.println("I'm trying to move " + defaultDirection.toString());
                 bugPath(defaultDirection);
+            }
+
         }
     }
 
@@ -29,13 +32,26 @@ public class Movement extends RobotPlayer {
             if(rc.canGetFlag(ecID) && rc.getFlag(ecID) != 0) {
                 // default flag value is zero, ignore if it hasn't been set
                 int ecFlag = rc.getFlag(ecID);
+                MapLocation flagLoc = Communication.getLocationFromFlag(ecFlag);
+                int flagSignal = Communication.getSignalFromFlag(ecFlag);
 
-                switch(Communication.getSignalFromFlag(ecFlag)) {
+                switch(flagSignal) {
                     case Signals.SLANDERER_EDGE:
-                        if(!rc.getType().equals(RobotType.SLANDERER))
-                            break;
-                        targetLocation = Communication.getLocationFromFlag(ecFlag);
-                        System.out.println("My target location is " + targetLocation.toString());
+                        switch(rc.getType()) {
+                            case SLANDERER:
+                                targetLocation = flagLoc;
+                                System.out.println("My target location is " + targetLocation.toString());
+                                break;
+                        }
+                        break;
+                    case Signals.EC_ENEMY:
+                        switch(rc.getType()) {
+                            case POLITICIAN:
+                                targetLocation = flagLoc;
+                                targetType = flagSignal;
+                                break;
+                        }
+                        break;
                 }
             }
         }

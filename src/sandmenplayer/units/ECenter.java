@@ -16,6 +16,10 @@ public class ECenter extends RobotPlayer {
     public static MapLocation slandererHideaway = null;
 
     public static void runEnlightenmentCenter() throws GameActionException {
+        poliInf = Math.max(20, rc.getInfluence()/25);
+        muckInf = Math.max(1, rc.getInfluence()/100);
+        slandererInf = Math.max(5, rc.getInfluence()/50);
+
         if(enemyECLocations.size() > 0 && rc.getInfluence() >= 100) {
             runAttackPhase();
             System.out.println("ENEMY EC FOUND at " + enemyECLocations.toArray()[0].toString());
@@ -26,9 +30,9 @@ public class ECenter extends RobotPlayer {
         }
     }
 
-    static int poliInf = Math.max(10, rc.getInfluence()/50);
-    static int muckInf = Math.max(1, rc.getInfluence()/150);
-    static int slandererInf = Math.max(5, rc.getInfluence()/100);
+    static int poliInf;
+    static int muckInf;
+    static int slandererInf;
 
     static int currentGiveInf;
 
