@@ -5,6 +5,7 @@ import sandmenplayer.Communication;
 import sandmenplayer.RobotPlayer;
 import sandmenplayer.Signals;
 
+import java.awt.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -68,6 +69,8 @@ public class ECenter extends RobotPlayer {
 
     static boolean poliBuild = true;
 
+    static int attackBuildCount = 1;
+
     public static void runAttackPhase() throws GameActionException {
         // set flag to communicate enemy EC
         // only first located EC for now
@@ -75,18 +78,12 @@ public class ECenter extends RobotPlayer {
         if(rc.canSetFlag(enemyEcFlag))
             rc.setFlag(enemyEcFlag);
 
+        RobotType[] spawnOrder = {RobotType.POLITICIAN, RobotType.MUCKRAKER, RobotType.POLITICIAN, RobotType.MUCKRAKER, RobotType.SLANDERER};
         // spawn units
-        RobotType toBuild = null;
-        if (poliBuild) {
-            toBuild = RobotType.POLITICIAN;
-            currentGiveInf = poliInf;
-        } else {
-            toBuild = RobotType.MUCKRAKER;
-            currentGiveInf = muckInf;
-        }
+        RobotType toBuild = spawnOrder[attackBuildCount % spawnOrder.length];
 
         if(tryBuildRobot(toBuild, currentGiveInf))
-            poliBuild = !poliBuild;
+            attackBuildCount += 1;
     }
 
 
