@@ -38,16 +38,17 @@ public class ECenter extends RobotPlayer {
         RobotType toBuild = null;
         if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
-            muckBuild = true;
         } else {
             toBuild = RobotType.MUCKRAKER;
-            muckBuild = false;
         }
 
-        tryBuildRobot(toBuild);
+        if(tryBuildRobot(toBuild))
+            muckBuild = !muckBuild;
         checkExistingRobots();
     }
-    public static void tryBuildRobot(RobotType rbtType) throws GameActionException {
+
+    // return whether robot was built successfully
+    public static boolean tryBuildRobot(RobotType rbtType) throws GameActionException {
         int influenceGive = 1;
         for (Direction dir : directions) {
             if (rc.canBuildRobot(rbtType, dir, influenceGive)) {
@@ -55,8 +56,10 @@ public class ECenter extends RobotPlayer {
                 // save robot ID after building
                 int newID = rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID();
                 robotIDs.add(newID);
+                return true;
             }
         }
+        return false;
     }
 
     public static void checkExistingRobots() throws GameActionException {
