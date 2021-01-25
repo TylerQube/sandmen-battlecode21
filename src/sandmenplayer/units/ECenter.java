@@ -31,12 +31,16 @@ public class ECenter extends RobotPlayer {
         tryBuildRobot(toBuild);
         checkExistingRobots();
     }
+    
+    static boolean muckBuild = false;
     public static void runDefaultPhase() throws GameActionException {
         RobotType toBuild = null;
-        if ((turnCount % 2) == 0) {
+        if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
-        } else if ((turnCount % 2) == 1) {
+            muckBuild = true;
+        } else {
             toBuild = RobotType.MUCKRAKER;
+            muckBuild = false;
         }
 
         tryBuildRobot(toBuild);
