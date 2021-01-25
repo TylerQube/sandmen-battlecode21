@@ -33,34 +33,6 @@ public class ECenter extends RobotPlayer {
         if(!built)
             System.out.println("EC: I couldn't build anything!");
 
-        boolean defenseFull = true;
-        MapLocation testLoc;
-        // Check if EC has a full ring of defenses
-        for (Direction dir : directions) {
-            testLoc = rc.getLocation().add(dir);
-            if (!rc.isLocationOccupied(testLoc) && rc.onTheMap(testLoc))
-                defenseFull = false;
-        }
-
-        // signal robots to move if defense is complete
-        if (defenseFull) {
-            System.out.println("All adjacent tiles are full!");
-            for (Direction dir : directions) {
-                testLoc = rc.getLocation().add(dir);
-                // if location is valid and is occupied by an ally
-                if (rc.onTheMap(testLoc) && rc.isLocationOccupied(testLoc) && Communication.isAlly(rc.senseRobotAtLocation(testLoc))) {
-                    int flag = Communication.getFlagFromLocation(testLoc, Signals.BEGIN_MOVING);
-                    if(rc.canSetFlag(flag)) {
-                        rc.setFlag(flag);
-                        break;
-                    }
-                }
-
-            }
-        } else {
-            System.out.println("Defense is not full!");
-        }
-
 
         // remove robot ID if it is destroyed
         for(Integer rbtID : robotIDs) {
