@@ -9,6 +9,7 @@ import java.awt.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.lang.Math;
 
 public class ECenter extends RobotPlayer {
     public static Set<Integer> robotIDs = new HashSet<>();
@@ -56,6 +57,7 @@ public class ECenter extends RobotPlayer {
     static boolean muckBuild = false;
     public static void runDefaultPhase() throws GameActionException {
         RobotType toBuild = null;
+        int phaseMax = 30;
         if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
             currentGiveInf = slandererInf;
@@ -70,8 +72,8 @@ public class ECenter extends RobotPlayer {
         if(tryBuildRobot(toBuild, currentGiveInf))
             muckBuild = !muckBuild;
         checkExistingRobots();
+        randomBid(phaseMax);
     }
-
     static boolean poliBuild = true;
 
     static int attackBuildCount = 1;
@@ -80,6 +82,7 @@ public class ECenter extends RobotPlayer {
         // set flag to communicate enemy EC
         // only first located EC for now
         int enemyEcFlag = Communication.getFlagFromLocation(enemyECLocations.iterator().next(), Signals.EC_ENEMY);
+        int phaseMax = 30;
         if(rc.canSetFlag(enemyEcFlag))
             rc.setFlag(enemyEcFlag);
 
@@ -89,6 +92,7 @@ public class ECenter extends RobotPlayer {
 
         if(tryBuildRobot(toBuild, currentGiveInf))
             attackBuildCount += 1;
+        randomBid(phaseMax);
     }
 
 
@@ -118,6 +122,17 @@ public class ECenter extends RobotPlayer {
         }
     }
 
+    public static void randomBid(int phaseMax) throws GameActionException{
+        int ranMax = phaseMax; 
+        int ranMin = 10; 
+        int ranRange = ranMax - ranMin + 1; 
+        int ranBid = (int)(Math.random() * ranRange) + ranMin;
+        if (rc.canBid(ranBid)) {
+            rc.bid(ranBid);
+        } else {
+            rc.bid(10);
+    }
+}
     public static void processRobotFlag(int flag) throws GameActionException {
         MapLocation signalLoc = Communication.getLocationFromFlag(flag);
         int signal = Communication.getSignalFromFlag(flag);
