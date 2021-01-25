@@ -134,7 +134,7 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    public static final double passabilityThreshold = 0.6;
+    public static final double passabilityThreshold = 0.4;
     public static Direction avoidDir = null;
 }
 

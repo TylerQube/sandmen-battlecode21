@@ -44,6 +44,27 @@ public class Movement extends RobotPlayer {
                     rc.setFlag(flagColor);
             }
         }
+
+        for(RobotInfo rbt : rc.senseNearbyRobots()) {
+            if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && Communication.isAlly(rbt)) {
+                if(rbt.getLocation().isAdjacentTo(rc.getLocation())) {
+                    boolean defenseFull = true;
+                    for(int i = 0; i < 9; i++) {
+                        MapLocation testLoc = rbt.getLocation().add(Direction.allDirections()[i]);
+                        if(!rc.onTheMap(testLoc)) {
+                            continue;
+                        }
+
+                        if(!rc.isLocationOccupied(testLoc) || !Communication.isAlly(rc.senseRobotAtLocation(testLoc))) {
+                            defenseFull = false;
+                        }
+                    }
+                    // enable movement if EC surrounded by ring of defense
+                    if(defenseFull)
+                        shouldMove = true;
+                }
+            }
+        }
     }
 
     public static void bugPath(Direction targetDir) throws GameActionException {
