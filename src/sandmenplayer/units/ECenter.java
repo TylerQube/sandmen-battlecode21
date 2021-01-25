@@ -16,8 +16,8 @@ public class ECenter extends RobotPlayer {
     public static MapLocation slandererHideaway = null;
 
     public static void runEnlightenmentCenter() throws GameActionException {
-        if(enemyECLocations.size() > 0) {
-            // attack phase
+        if(enemyECLocations.size() > 0 && rc.getInfluence() >= 100) {
+            runAttackPhase();
             System.out.println("ENEMY EC FOUND at " + enemyECLocations.toArray()[0].toString());
         } else if(turnCount < 18) {
             runEarlyPhase();
@@ -26,15 +26,23 @@ public class ECenter extends RobotPlayer {
         }
     }
 
+    static int poliInf = Math.max(10, rc.getInfluence()/50);
+    static int muckInf = Math.max(1, rc.getInfluence()/150);
+    static int slandererInf = Math.max(5, rc.getInfluence()/100);
+
+    static int currentGiveInf;
+
     public static void runEarlyPhase() throws GameActionException {
         RobotType toBuild = null;
         if (turnCount == 1) {
             toBuild = RobotType.SLANDERER;
+            currentGiveInf = slandererInf;
         } else {
             toBuild = RobotType.MUCKRAKER;
+            currentGiveInf = muckInf;
         }
 
-        tryBuildRobot(toBuild);
+        tryBuildRobot(toBuild, currentGiveInf);
         checkExistingRobots();
     }
     
@@ -43,18 +51,43 @@ public class ECenter extends RobotPlayer {
         RobotType toBuild = null;
         if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
+            currentGiveInf = slandererInf;
         } else {
             toBuild = RobotType.MUCKRAKER;
+            currentGiveInf = muckInf;
         }
 
-        if(tryBuildRobot(toBuild))
+        if(tryBuildRobot(toBuild, currentGiveInf))
             muckBuild = !muckBuild;
         checkExistingRobots();
     }
 
+    static boolean poliBuild = true;
+
+    public static void runAttackPhase() throws GameActionException {
+        // set flag to communicate enemy EC
+        // only first located EC for now
+        int enemyEcFlag = Communication.getFlagFromLocation(enemyECLocations.iterator().next(), Signals.EC_ENEMY);
+        if(rc.canSetFlag(enemyEcFlag))
+            rc.setFlag(enemyEcFlag);
+
+        // spawn units
+        RobotType toBuild = null;
+        if (poliBuild) {
+            toBuild = RobotType.POLITICIAN;
+            currentGiveInf = poliInf;
+        } else {
+            toBuild = RobotType.MUCKRAKER;
+            currentGiveInf = muckInf;
+        }
+
+        if(tryBuildRobot(toBuild, currentGiveInf))
+            poliBuild = !poliBuild;
+    }
+
+
     // return whether robot was built successfully
-    public static boolean tryBuildRobot(RobotType rbtType) throws GameActionException {
-        int influenceGive = 1;
+    public static boolean tryBuildRobot(RobotType rbtType, int influenceGive) throws GameActionException {
         for (Direction dir : directions) {
             if (rc.canBuildRobot(rbtType, dir, influenceGive)) {
                 rc.buildRobot(rbtType, dir, influenceGive);

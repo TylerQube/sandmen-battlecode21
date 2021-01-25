@@ -156,9 +156,11 @@ public class Movement extends RobotPlayer {
         MapLocation curLocation = rc.getLocation();
 
         // invalid target location
-        if(!rc.onTheMap(targetLocation)) {
-            targetLocation = null;
-            return;
+        if(rc.canSenseLocation(targetLocation)) {
+            if(!rc.onTheMap(targetLocation)) {
+                targetLocation = null;
+                return;
+            }
         }
 
         if(!rc.isReady()) {
@@ -187,7 +189,7 @@ public class Movement extends RobotPlayer {
         testDir = curLocation.directionTo(targetLocation);
         // if there is no direct square to get closer, keep the obstacle on the left
         for(int i = 0; i < 8; i++) {
-            if(rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
+            if(rc.canSenseLocation(curLocation.add(testDir)) && rc.onTheMap(curLocation.add(testDir)) && rc.sensePassability(curLocation.add(testDir)) > passabilityThreshold) {
                 if (rc.canMove(testDir) && rc.isReady()) {
                     rc.move(testDir);
                 }
