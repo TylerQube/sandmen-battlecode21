@@ -13,13 +13,11 @@ public class Movement extends RobotPlayer {
         if(shouldMove) {
             if(targetLocation != null) {
                 moveTowardsTarget(targetLocation);
-                System.out.println("My target location is " + targetLocation.toString());
             } else {
                 targetType = -1;
                 if(defaultDirection == null)
                     System.out.println("I am not trying to move anywhere.");
                 else
-                    System.out.println("I'm trying to move " + defaultDirection.toString());
                 bugPath(defaultDirection);
             }
 
@@ -40,7 +38,6 @@ public class Movement extends RobotPlayer {
                         switch(rc.getType()) {
                             case SLANDERER:
                                 targetLocation = flagLoc;
-                                System.out.println("My target location is " + targetLocation.toString());
                                 break;
                         }
                         break;
@@ -78,7 +75,6 @@ public class Movement extends RobotPlayer {
 
         // unit signal flags overrides detection of slanderer target location
         for(RobotInfo rbt : rc.senseNearbyRobots()) {
-            System.out.println("I see a " + rbt.getType().toString());
             // if slanderer, run away from all enemies
             if(rc.getType().equals(RobotType.SLANDERER)) {
                 defaultDirection = rc.getLocation().directionTo(rbt.getLocation()).opposite().rotateRight();
@@ -87,7 +83,6 @@ public class Movement extends RobotPlayer {
             if(rbt.getType().equals(RobotType.ENLIGHTENMENT_CENTER)) {
                 if(rbt.getTeam().equals(rc.getTeam().opponent())) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_ENEMY);
-                    System.out.println("ENEMY EC FOUND");
                 }
                 if(!rbt.getTeam().isPlayer()) {
                     flagColor = Communication.getFlagFromLocation(rbt.getLocation(), Signals.EC_NEUTRAL);
@@ -155,7 +150,6 @@ public class Movement extends RobotPlayer {
                 if(rc.sensePassability(curLocation.add(testDirection)) > passabilityThreshold) {
                     if (rc.canMove(testDirection) && rc.isReady()) {
                         rc.move(testDirection);
-                        System.out.println("Moved " + testDirection.toString());
                         defaultDirection = testDirection;
                         return;
                     } else {

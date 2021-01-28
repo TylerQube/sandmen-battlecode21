@@ -14,17 +14,22 @@ import java.lang.Math;
 public class ECenter extends RobotPlayer {
     public static Set<Integer> robotIDs = new HashSet<>();
     public static Set<MapLocation> enemyECLocations = new HashSet<>();
-
+    public static Set<MapLocation> neutralECLocations = new HashSet<>();
     public static MapLocation slandererHideaway = null;
+    static int muckInf;
+    static int slandererInf;
+    static int currentGiveInf;
 
     public static void runEnlightenmentCenter() throws GameActionException {
-        poliInf = Math.max(20, rc.getInfluence()/25);
         muckInf = Math.max(1, rc.getInfluence()/100);
         slandererInf = Math.max(5, rc.getInfluence()/50);
 
         if(enemyECLocations.size() > 0 && rc.getInfluence() >= 100) {
-            System.out.println("ATTACK PHASE");
-            runAttackPhase();
+            System.out.println("ENEMY ATTACK PHASE");
+            runEnemyAttackPhase();
+        } else if(neutralECLocations.size() > 0 && rc.getInfluence() >= 100) {
+            System.out.println("NEUTRAL ATTACK PHASE");
+            runNeutralAttackPhase();
         } else if(turnCount < 18) {
             System.out.println("EARLY PHASE");
             runEarlyPhase();
@@ -33,12 +38,6 @@ public class ECenter extends RobotPlayer {
             runDefaultPhase();
         }
     }
-
-    static int poliInf;
-    static int muckInf;
-    static int slandererInf;
-
-    static int currentGiveInf;
 
     public static void runEarlyPhase() throws GameActionException {
         RobotType toBuild = null;
@@ -57,7 +56,6 @@ public class ECenter extends RobotPlayer {
     static boolean muckBuild = false;
     public static void runDefaultPhase() throws GameActionException {
         RobotType toBuild = null;
-        int phaseMax = 30;
         if (!muckBuild) {
             toBuild = RobotType.SLANDERER;
             currentGiveInf = slandererInf;
@@ -72,30 +70,44 @@ public class ECenter extends RobotPlayer {
         if(tryBuildRobot(toBuild, currentGiveInf))
             muckBuild = !muckBuild;
         checkExistingRobots();
-        randomBid(phaseMax);
+        
+        if(rc.canBid(2)){
+            rc.bid(2);
+        }
     }
     static boolean poliBuild = true;
 
     static int attackBuildCount = 1;
 
-    public static void runAttackPhase() throws GameActionException {
+    public static void runEnemyAttackPhase() throws GameActionException {
         // set flag to communicate enemy EC
         // only first located EC for now
         int enemyEcFlag = Communication.getFlagFromLocation(enemyECLocations.iterator().next(), Signals.EC_ENEMY);
-        int phaseMax = 30;
+        int phaseMax = 175;
         if(rc.canSetFlag(enemyEcFlag))
             rc.setFlag(enemyEcFlag);
-
-        RobotType[] spawnOrder = {RobotType.POLITICIAN, RobotType.MUCKRAKER, RobotType.POLITICIAN, RobotType.MUCKRAKER, RobotType.SLANDERER};
+        RobotType[] spawnOrder = {RobotType.POLITICIAN, RobotType.POLITICIAN, RobotType.SLANDERER};
         // spawn units
         RobotType toBuild = spawnOrder[attackBuildCount % spawnOrder.length];
 
-        if(tryBuildRobot(toBuild, currentGiveInf))
+        if(tryBuildRobot(toBuild, randomPoli(phaseMax)))
             attackBuildCount += 1;
-        randomBid(phaseMax);
     }
 
+    public static void runNeutralAttackPhase() throws GameActionException {
+        // set flag to communicate enemy EC
+        // only first located EC for now
+        int neutralEcFlag = Communication.getFlagFromLocation(neutralECLocations.iterator().next(), Signals.EC_NEUTRAL);
+        int phaseMax = 150;
+        if(rc.canSetFlag(neutralEcFlag))
+            rc.setFlag(neutralEcFlag);
+        RobotType[] spawnOrder = {RobotType.POLITICIAN, RobotType.POLITICIAN, RobotType.SLANDERER};
+        // spawn units
+        RobotType toBuild = spawnOrder[attackBuildCount % spawnOrder.length];
 
+        if(tryBuildRobot(toBuild, randomPoli(phaseMax)))
+            attackBuildCount += 1;
+    }
     // return whether robot was built successfully
     public static boolean tryBuildRobot(RobotType rbtType, int influenceGive) throws GameActionException {
         for (Direction dir : directions) {
@@ -122,17 +134,14 @@ public class ECenter extends RobotPlayer {
         }
     }
 
-    public static void randomBid(int phaseMax) throws GameActionException{
+    public static int randomPoli(int phaseMax) throws GameActionException{
         int ranMax = phaseMax; 
-        int ranMin = 10; 
+        int ranMin = 1; 
         int ranRange = ranMax - ranMin + 1; 
         int ranBid = (int)(Math.random() * ranRange) + ranMin;
-        if (rc.canBid(ranBid)) {
-            rc.bid(ranBid);
-        } else {
-            rc.bid(10);
+        return ranBid;
     }
-}
+
     public static void processRobotFlag(int flag) throws GameActionException {
         MapLocation signalLoc = Communication.getLocationFromFlag(flag);
         int signal = Communication.getSignalFromFlag(flag);
@@ -141,6 +150,10 @@ public class ECenter extends RobotPlayer {
             case Signals.EC_ENEMY:
                 // enemy EC found, store location
                 enemyECLocations.add(signalLoc);
+                break;
+            case Signals.EC_NEUTRAL:
+                // enemy EC found, store location
+                neutralECLocations.add(signalLoc);
                 break;
             case Signals.SLANDERER_EDGE:
                 MapLocation curLoc = rc.getLocation();

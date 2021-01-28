@@ -9,12 +9,13 @@ import sandmenplayer.RobotPlayer;
 
 public class Politician extends RobotPlayer {
     public static void runPolitician() throws GameActionException {
-        empowerStrategy();
+        empowerEnemyStrategy();
+        empowerNeutralStrategy();
         Movement.processSurroundings();
         Movement.runMovement();
     }
 
-    public static void empowerStrategy() throws GameActionException {
+    public static void empowerEnemyStrategy() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
@@ -28,12 +29,29 @@ public class Politician extends RobotPlayer {
         }
 
         // empower if lots of bots
+        
         if (attackable.length > 3) {
             tryEmpower(actionRadius);
             return;
         }
     }
-
+    public static void empowerNeutralStrategy() throws GameActionException {
+        Team neutralEnemy = rc.getTeam().NEUTRAL;
+        boolean neutralTrue = rc.getTeam().isPlayer();
+        int actionRadius = rc.getType().actionRadiusSquared;
+        RobotInfo[] neutralAttackable = rc.senseNearbyRobots(actionRadius, neutralEnemy);
+        for (RobotInfo inf : neutralAttackable) {
+            if ((inf.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && (neutralTrue))) {
+                tryEmpower(actionRadius);
+                return;
+            }
+        }
+        // empower if lots of bots
+        if (neutralAttackable.length > 0) {
+            tryEmpower(actionRadius);
+            return;
+        }
+    }
     public static void tryEmpower(int actionRadius) throws GameActionException {
         if (rc.canEmpower(actionRadius))
             rc.empower(actionRadius);

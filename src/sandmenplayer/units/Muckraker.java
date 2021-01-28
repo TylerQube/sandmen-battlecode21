@@ -14,7 +14,6 @@ public class Muckraker extends RobotPlayer {
             if (robot.type.canBeExposed()) {
                 // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) {
-                    System.out.println("e x p o s e d");
                     rc.expose(robot.location);
                     return;
                 }
